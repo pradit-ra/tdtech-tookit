@@ -3,6 +3,7 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // MenuChoice identifies which item a choice menu (main, GCP, or GKE) picked.
@@ -43,13 +44,35 @@ type choiceMenuModel struct {
 	choice MenuChoice
 }
 
+var (
+	accentPink     = lipgloss.AdaptiveColor{Light: "#D93A9A", Dark: "212"}
+	accentCyan     = lipgloss.AdaptiveColor{Light: "#0072A3", Dark: "87"}
+	textNormal     = lipgloss.AdaptiveColor{Light: "#1A1A1A", Dark: "255"}
+	textDimmed     = lipgloss.AdaptiveColor{Light: "#5A5A5A", Dark: "245"}
+	titleFg        = lipgloss.AdaptiveColor{Light: "#FFFFFF", Dark: "#000000"}
+	menuTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(titleFg).Background(accentPink).Padding(0, 1)
+	statusStyle    = lipgloss.NewStyle().Foreground(accentCyan)
+	itemNormal     = lipgloss.NewStyle().Foreground(textNormal)
+	itemDimmed     = lipgloss.NewStyle().Foreground(textDimmed)
+	itemSelected   = lipgloss.NewStyle().Bold(true).Foreground(accentCyan).BorderStyle(lipgloss.NormalBorder()).BorderForeground(accentCyan).BorderLeft(true).Padding(0, 0, 0, 1)
+)
+
 func newChoiceMenu(title string, items []choiceItem) tea.Model {
 	li := make([]list.Item, len(items))
 	for i, it := range items {
 		li[i] = it
 	}
-	l := list.New(li, list.NewDefaultDelegate(), 60, 14)
+
+	delegate := list.NewDefaultDelegate()
+	delegate.Styles.NormalTitle = itemNormal
+	delegate.Styles.NormalDesc = itemDimmed
+	delegate.Styles.SelectedTitle = itemSelected
+	delegate.Styles.SelectedDesc = itemSelected.Foreground(accentCyan)
+
+	l := list.New(li, delegate, 64, 16)
 	l.Title = title
+	l.Styles.Title = menuTitleStyle
+	l.Styles.StatusBar = statusStyle
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	return choiceMenuModel{list: l}
